@@ -155,7 +155,7 @@
         </nav>
 
         <div class="p-3 border-t border-white/10 bg-black/20 text-xs text-theme-200 flex justify-between items-center">
-            <span>Phiên bản nâng cấp 1.0</span>
+            <span>Phiên bản nâng cấp 1.1</span>
             <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-white/10 text-amber-300" title="Chế độ Sáng/Tối"><i class="fas fa-moon" id="theme-icon"></i></button>
         </div>
     </aside>
@@ -336,6 +336,15 @@
                             <button id="btn-target-group" onclick="setPointTargetMode('group')" class="flex-1 py-2 text-xs font-bold text-slate-500 rounded-lg transition" data-i18n="targetGroup">Cả Tổ</button>
                         </div>
 
+                        <!-- THANH TÌM NHANH HỌC SINH NHẬN THƯỞNG -->
+                        <div id="point-search-wrapper" class="relative">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="point-search-student-input" oninput="filterPointsStudentDropdown()" placeholder="Gõ tìm nhanh học sinh (tên, biệt danh)..." class="w-full pl-9 pr-8 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold outline-none focus:border-theme-500 text-slate-800 dark:text-slate-100">
+                            <button type="button" onclick="clearPointsStudentSearch()" id="btn-clear-point-search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+
                         <select id="point-recipient-select" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border-2 border-theme-500/30 rounded-2xl text-sm font-bold text-slate-800 dark:text-slate-100 outline-none focus:border-theme-500"></select>
                     </div>
 
@@ -360,10 +369,22 @@
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                        <!-- KHỐI CHỌN & TÌM NHANH HỌC SINH ĐỔI QUÀ -->
                         <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
-                            <label class="text-xs font-bold text-slate-500 pl-2" data-i18n="viewForStudent">Xem cho em:</label>
-                            <select id="reward-student-select" onchange="renderRewardStore(); renderMilestones();" class="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold outline-none flex-1 sm:flex-initial"></select>
-                            <div class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 font-extrabold text-xs rounded-xl border border-amber-200 flex items-center gap-1.5">
+                            <label class="text-xs font-bold text-slate-500 pl-2 whitespace-nowrap" data-i18n="viewForStudent">Xem cho em:</label>
+                            
+                            <!-- Ô Tìm Nhanh Học Sinh Đổi Quà -->
+                            <div class="relative min-w-[140px] flex-1 sm:flex-initial">
+                                <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                                <input type="text" id="reward-student-search-input" oninput="filterRewardStudentDropdown()" placeholder="Tìm tên em..." class="w-full pl-7 pr-6 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold outline-none focus:border-theme-500 text-slate-800 dark:text-slate-100">
+                                <button type="button" onclick="clearRewardStudentSearch()" id="btn-clear-reward-search" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px]">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                            </div>
+
+                            <select id="reward-student-select" onchange="onRewardStudentSelectChange()" class="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold outline-none flex-1 sm:flex-initial max-w-[180px] truncate"></select>
+                            
+                            <div class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 font-extrabold text-xs rounded-xl border border-amber-200 flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fas fa-coins text-amber-500"></i> <span id="reward-student-stars" class="font-black">0</span> <span data-i18n="starUnit">sao</span>
                             </div>
                         </div>
@@ -419,7 +440,6 @@
                     <div>
                         <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
                             <span data-i18n="attendanceTitle">Điểm Danh Lớp Học</span>
-                            <!-- Huy hiệu trạng thái thời gian thực -->
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 animate-pulse border border-emerald-300">
                                 <i class="fas fa-circle text-[7px] text-emerald-500"></i> Trực tiếp
                             </span>
@@ -429,14 +449,12 @@
 
                     <!-- KHỐI ĐIỀU KHIỂN THỜI GIAN THỰC -->
                     <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                        <!-- Đồng hồ số thời gian thực -->
                         <div class="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-xs">
                             <i class="fas fa-clock text-amber-500"></i>
                             <span id="realtime-clock-display" class="font-mono font-black text-slate-800 dark:text-slate-100">00:00:00</span>
                             <span id="realtime-date-display" class="text-[11px] font-bold text-slate-400 hidden md:inline">--/--/----</span>
                         </div>
 
-                        <!-- Chọn ngày & Nút trở về Hôm nay -->
                         <div class="flex items-center gap-1.5 flex-1 sm:flex-initial">
                             <input type="date" id="attendance-date" onchange="loadAttendance()" class="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none flex-1 sm:flex-initial shadow-sm">
                             <button onclick="goToTodayAttendance()" class="px-2.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-600 transition whitespace-nowrap" title="Trở về ngày hôm nay">
@@ -1352,7 +1370,7 @@
                 { id: 'm4', name: 'Đại Sứ Toàn Diện', points: 200, icon: 'fa-crown', perk: 'Vinh danh bảng vàng trường' }
             ],
             attendance: {}, 
-            attendanceTime: {}, // Lưu mốc thời gian thực khi điểm danh
+            attendanceTime: {},
             monthlyArchives: [],
             settings: { 
                 themeColor: 'teal',
@@ -1550,7 +1568,6 @@
             } catch(e) { resolve(); }
         });
 
-        // --- CẬP NHẬT ĐỒNG HỒ & THỜI GIAN THỰC REAL-TIME ---
         const startRealTimeClock = () => {
             const updateClock = () => {
                 const now = new Date();
@@ -1642,7 +1659,6 @@
                 }
             }
 
-            // Thiết lập ngày điểm danh chuẩn theo thời gian thực hôm nay[cite: 1]
             const todayRealtime = getTodayRealTimeDateString();
             const attDateInput = document.getElementById('attendance-date');
             if (attDateInput) attDateInput.value = todayRealtime;
@@ -1728,7 +1744,6 @@
             }, 3000);
         }
 
-        // --- DASHBOARD ---
         const renderDashboard = () => {
             document.getElementById('dash-total-students').innerText = AppState.students.length;
             document.getElementById('dash-total-groups').innerText = AppState.groups.length;
@@ -1812,7 +1827,7 @@
                 closeModal('modal-header-title');
                 showToast('Đã cập nhật tiêu đề Header!');
             } else {
-                alert('Vui lòng không để trống tiêu đề!');
+                showToast('Vui lòng không để trống tiêu đề!');
             }
         };
 
@@ -1958,7 +1973,7 @@
         };
 
         const clearAllStudents = async () => {
-            if (AppState.students.length === 0) return alert('Danh sách học sinh đang trống!');
+            if (AppState.students.length === 0) return showToast('Danh sách học sinh đang trống!');
             if (!confirm(`CẢNH BÁO: Xóa toàn bộ ${AppState.students.length} học sinh hiện tại?`)) return;
             AppState.students = [];
             AppState.attendance = {};
@@ -2065,7 +2080,7 @@
             const role = document.getElementById('form-student-role').value.trim();
             const urlAvatar = document.getElementById('form-student-avatar-url').value.trim();
 
-            if (!name) return alert('Vui lòng nhập họ và tên!');
+            if (!name) return showToast('Vui lòng nhập họ và tên!');
 
             let finalAvatar = '';
             if (tempStudentAvatarBase64) {
@@ -2242,26 +2257,73 @@
             pointTargetMode = mode;
             const btnSt = document.getElementById('btn-target-student');
             const btnGrp = document.getElementById('btn-target-group');
+            const searchWrap = document.getElementById('point-search-wrapper');
+
             if (mode === 'student') {
                 btnSt.className = 'flex-1 py-2 text-xs font-bold bg-white dark:bg-slate-800 rounded-lg shadow-sm text-theme-700 dark:text-theme-300 transition';
                 btnGrp.className = 'flex-1 py-2 text-xs font-bold text-slate-500 rounded-lg transition';
+                if (searchWrap) searchWrap.classList.remove('hidden');
             } else {
                 btnGrp.className = 'flex-1 py-2 text-xs font-bold bg-white dark:bg-slate-800 rounded-lg shadow-sm text-theme-700 dark:text-theme-300 transition';
                 btnSt.className = 'flex-1 py-2 text-xs font-bold text-slate-500 rounded-lg transition';
+                if (searchWrap) searchWrap.classList.add('hidden');
             }
             renderPointsSelect();
         };
 
-        const renderPointsSelect = () => {
+        // TÌM NHANH HỌC SINH TRONG THẺ GHI NHẬN & TUYÊN DƯƠNG
+        const filterPointsStudentDropdown = () => {
+            const keyword = (document.getElementById('point-search-student-input')?.value || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('btn-clear-point-search');
+            if (clearBtn) {
+                if (keyword) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+            renderPointsSelect(keyword);
+        };
+
+        const clearPointsStudentSearch = () => {
+            const input = document.getElementById('point-search-student-input');
+            if (input) input.value = '';
+            filterPointsStudentDropdown();
+            input?.focus();
+        };
+
+        const renderPointsSelect = (searchKeyword = '') => {
             const sel = document.getElementById('point-recipient-select');
             if (!sel) return;
 
+            const prevValue = sel.value;
+
             if (pointTargetMode === 'student') {
-                sel.innerHTML = `<option value="" disabled selected>-- ${currentLang==='vi'?'Chọn học sinh nhận thưởng':'Select Student'} --</option>` +
-                    AppState.students.map(s => `<option value="${s.id}">${s.name} (${s.points||0} sao)</option>`).join('');
+                const kw = searchKeyword.toLowerCase();
+                const filtered = AppState.students.filter(s => {
+                    if (!kw) return true;
+                    return s.name.toLowerCase().includes(kw) || (s.nickname && s.nickname.toLowerCase().includes(kw));
+                });
+
+                if (filtered.length === 0) {
+                    sel.innerHTML = `<option value="" disabled selected>-- Không tìm thấy học sinh phù hợp --</option>`;
+                    return;
+                }
+
+                const optionsHtml = filtered.map(s => {
+                    const nick = s.nickname ? ` [${s.nickname}]` : '';
+                    return `<option value="${s.id}">${s.name}${nick} (${s.points||0} sao)</option>`;
+                }).join('');
+
+                sel.innerHTML = `<option value="" disabled ${!prevValue ? 'selected' : ''}>-- ${currentLang==='vi'?'Chọn học sinh nhận thưởng':'Select Student'} --</option>` + optionsHtml;
+
+                // Tự động giữ giá trị đã chọn nếu có trong danh sách lọc, hoặc tự chọn phần tử đầu tiên nếu đang gõ tìm kiếm
+                if (prevValue && filtered.some(s => s.id === prevValue)) {
+                    sel.value = prevValue;
+                } else if (kw && filtered.length > 0) {
+                    sel.value = filtered[0].id;
+                }
             } else {
                 sel.innerHTML = `<option value="" disabled selected>-- ${currentLang==='vi'?'Chọn Tổ nhận thưởng':'Select Team'} --</option>` +
                     AppState.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+                if (prevValue) sel.value = prevValue;
             }
         };
 
@@ -2296,7 +2358,7 @@
 
         const applyPoints = async (critId) => {
             const recipientId = document.getElementById('point-recipient-select')?.value;
-            if (!recipientId) return alert(currentLang==='vi'?'Vui lòng chọn học sinh hoặc Tổ trước khi chấm sao!':'Please select a student or team first!');
+            if (!recipientId) return showToast(currentLang==='vi'?'Vui lòng chọn học sinh hoặc Tổ trước khi chấm sao!':'Please select a student or team first!');
 
             const crit = AppState.criteria.find(c => c.id === critId);
             if (!crit) return;
@@ -2418,15 +2480,72 @@
             document.getElementById('form-reward-image-file').value = '';
         };
 
-        const renderRewardStore = () => {
+        // TÌM NHANH HỌC SINH TRONG THẺ ĐỔI QUÀ & CỘT MỐC
+        const filterRewardStudentDropdown = () => {
+            const keyword = (document.getElementById('reward-student-search-input')?.value || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('btn-clear-reward-search');
+            if (clearBtn) {
+                if (keyword) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            renderRewardStudentOptions(keyword);
+            renderRewardStore(false);
+            renderMilestones();
+        };
+
+        const clearRewardStudentSearch = () => {
+            const input = document.getElementById('reward-student-search-input');
+            if (input) input.value = '';
+            filterRewardStudentDropdown();
+            input?.focus();
+        };
+
+        const onRewardStudentSelectChange = () => {
+            renderRewardStore(false);
+            renderMilestones();
+        };
+
+        const renderRewardStudentOptions = (searchKeyword = '') => {
+            const sel = document.getElementById('reward-student-select');
+            if (!sel) return;
+
+            const prevVal = sel.value;
+            const kw = searchKeyword.toLowerCase();
+
+            const filtered = AppState.students.filter(s => {
+                if (!kw) return true;
+                return s.name.toLowerCase().includes(kw) || (s.nickname && s.nickname.toLowerCase().includes(kw));
+            });
+
+            if (filtered.length === 0) {
+                sel.innerHTML = `<option value="">-- Không tìm thấy --</option>`;
+                return;
+            }
+
+            sel.innerHTML = `<option value="">-- ${currentLang==='vi'?'Chọn học sinh đổi quà':'Select Student'} --</option>` +
+                filtered.map(s => {
+                    const nick = s.nickname ? ` (${s.nickname})` : '';
+                    return `<option value="${s.id}">${s.name}${nick}</option>`;
+                }).join('');
+
+            if (prevVal && filtered.some(s => s.id === prevVal)) {
+                sel.value = prevVal;
+            } else if (kw && filtered.length > 0) {
+                sel.value = filtered[0].id;
+            }
+        };
+
+        const renderRewardStore = (rebuildStudentOptions = true) => {
             const sel = document.getElementById('reward-student-select');
             const grid = document.getElementById('rewards-grid');
             if (!sel || !grid) return;
 
-            const currVal = sel.value;
-            sel.innerHTML = `<option value="">-- ${currentLang==='vi'?'Chọn học sinh đổi quà':'Select Student'} --</option>` +
-                AppState.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            if (currVal) sel.value = currVal;
+            if (rebuildStudentOptions) {
+                const searchInput = document.getElementById('reward-student-search-input');
+                const kw = searchInput ? searchInput.value.trim() : '';
+                renderRewardStudentOptions(kw);
+            }
 
             const currentSt = AppState.students.find(s => s.id === sel.value);
             const starsAvailable = currentSt ? (currentSt.availableStars || 0) : 0;
@@ -2533,9 +2652,9 @@
             const icon = document.getElementById('form-reward-icon').value || 'fa-gift';
             const urlImage = document.getElementById('form-reward-image-url').value.trim();
 
-            if (!name) return alert('Vui lòng nhập tên phần quà!');
-            if (isNaN(cost) || cost <= 0) return alert('Số sao phải lớn hơn 0!');
-            if (isNaN(stock) || stock < 0) return alert('Số lượng tồn kho không hợp lệ!');
+            if (!name) return showToast('Vui lòng nhập tên phần quà!');
+            if (isNaN(cost) || cost <= 0) return showToast('Số sao phải lớn hơn 0!');
+            if (isNaN(stock) || stock < 0) return showToast('Số lượng tồn kho không hợp lệ!');
 
             let finalImage = '';
             if (tempRewardImageBase64) {
@@ -2580,11 +2699,11 @@
             if (!st || !rew) return;
 
             if (rew.stock !== undefined && rew.stock <= 0) {
-                return alert(currentLang === 'vi' ? 'Phần quà này hiện đã hết hàng trong kho!' : 'This reward is currently out of stock!');
+                return showToast(currentLang === 'vi' ? 'Phần quà này hiện đã hết hàng trong kho!' : 'This reward is currently out of stock!');
             }
 
             if ((st.availableStars || 0) < rew.cost) {
-                return alert(currentLang === 'vi' ? 'Học sinh không đủ sao khả dụng!' : 'Student does not have enough stars!');
+                return showToast(currentLang === 'vi' ? 'Học sinh không đủ sao khả dụng!' : 'Student does not have enough stars!');
             }
 
             const promptMsg = currentLang === 'vi'
@@ -2600,7 +2719,7 @@
 
                 if (typeof confetti !== 'undefined') confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
                 showToast(currentLang === 'vi' ? `Đổi quà thành công cho ${st.name}! (Còn ${rew.stock} quà)` : `Redeemed for ${st.name}! (${rew.stock} left)`);
-                renderRewardStore();
+                renderRewardStore(false);
             }
         };
 
@@ -2687,8 +2806,8 @@
             const perk = document.getElementById('form-milestone-perk').value.trim();
             const icon = document.getElementById('form-milestone-icon').value || 'fa-award';
 
-            if (!name) return alert('Vui lòng nhập tên cột mốc!');
-            if (isNaN(points) || points <= 0) return alert('Điểm mốc sao phải lớn hơn 0!');
+            if (!name) return showToast('Vui lòng nhập tên cột mốc!');
+            if (isNaN(points) || points <= 0) return showToast('Điểm mốc sao phải lớn hơn 0!');
 
             if (id) {
                 const m = AppState.milestones.find(x => x.id === id);
@@ -2718,7 +2837,6 @@
             showToast('Đã xóa cột mốc');
         };
 
-        // --- TỔ / NHÓM THI ĐUA ---
         const renderGroups = () => {
             const grid = document.getElementById('groups-grid');
             if (!grid) return;
@@ -2775,7 +2893,7 @@
             const id = document.getElementById('form-group-id').value;
             const name = document.getElementById('form-group-name').value.trim();
             const color = document.getElementById('form-group-color').value;
-            if (!name) return alert('Vui lòng nhập tên Tổ!');
+            if (!name) return showToast('Vui lòng nhập tên Tổ!');
 
             if (id) {
                 const g = AppState.groups.find(x => x.id === id);
@@ -2808,7 +2926,6 @@
             showToast('Đã xóa Tổ');
         };
 
-        // --- ĐIỂM DANH (THỜI GIAN THỰC) ---
         const loadAttendance = () => {
             const date = document.getElementById('attendance-date')?.value;
             const tbody = document.getElementById('attendance-table-body');
@@ -2891,7 +3008,6 @@
             showToast('Đã đánh dấu cả lớp có mặt theo giờ thực tế!');
         };
 
-        // --- VÒNG QUAY MAY MẮN ---
         let wheelMode = 'student';
         let isSpinning = false;
         let tickSynth = null;
@@ -2994,7 +3110,7 @@
         const spinWheel = async () => {
             if (isSpinning) return;
             const items = getWheelItemList();
-            if (items.length === 0) return alert(`Chưa có ${wheelMode === 'student' ? 'học sinh' : 'tổ'} nào!`);
+            if (items.length === 0) return showToast(`Chưa có ${wheelMode === 'student' ? 'học sinh' : 'tổ'} nào!`);
 
             if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 await Tone.start();
@@ -3067,7 +3183,6 @@
             }, 4600);
         };
 
-        // --- ĐỒNG HỒ ĐẾM GIỜ ---
         let clockSeconds = 300;
         let clockTimer = null;
         let clockRunning = false;
@@ -3120,13 +3235,12 @@
                         icon.className = 'fas fa-play';
                         btn.querySelector('span').innerText = currentLang==='vi'?'Bắt đầu':'Start';
                         playRewardSound();
-                        alert('HẾT GIỜ!');
+                        showToast('HẾT GIỜ!');
                     }
                 }, 1000);
             }
         };
 
-        // --- BÁO CÁO & XẾP HẠNG THI ĐUA ---
         const changeReportPeriod = (period) => {
             currentReportPeriod = period;
             const btnAll = document.getElementById('btn-period-all');
@@ -3261,8 +3375,8 @@
             const monthVal = document.getElementById('monthly-archive-month').value;
             const note = document.getElementById('monthly-archive-note').value.trim();
 
-            if (!monthVal) return alert('Vui lòng chọn Tháng/Năm lưu trữ!');
-            if (AppState.students.length === 0) return alert('Chưa có dữ liệu học sinh để lưu trữ!');
+            if (!monthVal) return showToast('Vui lòng chọn Tháng/Năm lưu trữ!');
+            if (AppState.students.length === 0) return showToast('Chưa có dữ liệu học sinh để lưu trữ!');
 
             const [y, m] = monthVal.split('-');
             const archiveId = `archive_${y}_${m}`;
@@ -3315,7 +3429,7 @@
         const openMonthlyHistoryModal = () => {
             const sel = document.getElementById('monthly-history-select');
             if (AppState.monthlyArchives.length === 0) {
-                return alert('Chưa có tháng nào được lưu trữ. Hãy bấm "Lưu kết quả tháng này" trước!');
+                return showToast('Chưa có tháng nào được lưu trữ. Hãy bấm "Lưu kết quả tháng này" trước!');
             }
 
             AppState.monthlyArchives.sort((a, b) => b.month.localeCompare(a.month));
@@ -3387,7 +3501,7 @@
             const record = AppState.monthlyArchives.find(a => a.id === archiveId);
             if (!record) return;
 
-            if (typeof XLSX === 'undefined') return alert('Thư viện Excel đang được nạp...');
+            if (typeof XLSX === 'undefined') return showToast('Thư viện Excel đang được nạp...');
 
             const data = record.students.map(s => ({
                 'Hạng': s.rank,
@@ -3408,7 +3522,7 @@
         };
 
         const exportAllExcel = () => {
-            if (typeof XLSX === 'undefined') return alert('Thư viện Excel đang được nạp...');
+            if (typeof XLSX === 'undefined') return showToast('Thư viện Excel đang được nạp...');
 
             const data = AppState.students.map((s, i) => {
                 const g = AppState.groups.find(gr => gr.id === s.groupId);
@@ -3432,7 +3546,7 @@
         };
 
         const downloadStudentTemplate = () => {
-            if (typeof XLSX === 'undefined') return alert('Thư viện Excel đang được nạp...');
+            if (typeof XLSX === 'undefined') return showToast('Thư viện Excel đang được nạp...');
             const sample = [
                 { 'Họ và Tên (*)': 'Nguyễn Văn An', 'Tên gọi/Biệt danh': 'Bo', 'Giới tính (Nam/Nữ)': 'Nam', 'Tổ': 'Tổ 1', 'Vai trò': 'Lớp trưởng' },
                 { 'Họ và Tên (*)': 'Trần Thị Mai', 'Tên gọi/Biệt danh': 'Bông', 'Giới tính (Nam/Nữ)': 'Nữ', 'Tổ': 'Tổ 2', 'Vai trò': '' }
@@ -3455,7 +3569,7 @@
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                    if (json.length <= 1) return alert('File không có dữ liệu!');
+                    if (json.length <= 1) return showToast('File không có dữ liệu!');
 
                     let count = 0;
                     for (let i = 1; i < json.length; i++) {
@@ -3488,7 +3602,7 @@
                     renderAll();
                     showToast(`Đã nhập ${count} học sinh thành công!`);
                 } catch(err) {
-                    alert('Lỗi khi đọc file Excel!');
+                    showToast('Lỗi khi đọc file Excel!');
                 } finally {
                     e.target.value = '';
                 }
