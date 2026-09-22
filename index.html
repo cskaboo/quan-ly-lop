@@ -101,16 +101,67 @@
             color: #fef08a !important;
             font-weight: 700;
         }
-        .wheel-container { position: relative; width: 280px; height: 280px; margin: 0 auto; }
-        @media (min-width: 640px) {
-            .wheel-container { width: 330px; height: 330px; }
+        /* VÒNG QUAY GỌI TÊN - SÂN BAY NGẪU NHIÊN THEO MẪU ẢNH */
+        .wheel-container { position: relative; width: min(100%, 760px); height: 430px; margin: 0 auto; }
+        @media (max-width: 639px) {
+            .wheel-container { height: 360px; }
         }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--theme-600); position: relative; overflow: hidden; transition: transform 4.5s cubic-bezier(0.12, 0.85, 0.2, 1); }
-        .wheel-pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 26px solid #ef4444; z-index: 20; }
-        .wheel-slice { position: absolute; top: 0; left: 50%; width: 50%; height: 50%; transform-origin: 0% 100%; clip-path: polygon(0 0, 100% 0, 100% 100%); display: flex; align-items: center; justify-content: flex-start; padding-left: 15px; }
-        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 46px; height: 46px; background: white; border-radius: 50%; z-index: 10; border: 4px solid var(--theme-600); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(0,0,0,0.25); }
-        @media (min-width: 640px) {
-            .wheel-center { width: 54px; height: 54px; }
+        .wheel {
+            width: 100%; height: 100%; border-radius: 26px; border: 2px solid rgba(255,255,255,.75);
+            position: relative; overflow: hidden; transform: none !important;
+            background:
+                radial-gradient(circle at 78% 24%, rgba(255,255,255,.55) 0 4%, transparent 4.5%),
+                radial-gradient(circle at 16% 78%, rgba(255,255,255,.35) 0 5%, transparent 5.5%),
+                linear-gradient(180deg, #75c96b 0%, #4c9d59 20%, #79c8f2 44%, #43b7ea 100%);
+            box-shadow: inset 0 35px 60px rgba(255,255,255,.16), inset 0 -30px 50px rgba(0,65,105,.10), 0 10px 28px rgba(15,23,42,.12);
+        }
+        .wheel::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+            background:
+                radial-gradient(ellipse at 12% 18%, rgba(255,255,255,.48) 0 8%, transparent 9%),
+                radial-gradient(ellipse at 88% 14%, rgba(255,255,255,.34) 0 7%, transparent 8%),
+                linear-gradient(180deg, transparent 0 42%, rgba(255,255,255,.08) 43% 45%, transparent 46%);
+        }
+        .wheel-pointer, .wheel-center { display: none !important; }
+        .wheel-slice { display: none; }
+        .random-flight-item {
+            position: absolute; z-index: 4; width: 72px; height: 72px; transform-origin: 50% 70%;
+            will-change: transform, left, top; pointer-events: none; user-select: none;
+            transition: filter .2s ease;
+        }
+        .random-flight-item img {
+            display: block; width: 58px; height: 58px; margin: 0 auto; object-fit: cover;
+            border-radius: 50%; border: 3px solid rgba(255,255,255,.96);
+            background: rgba(255,255,255,.88); box-shadow: 0 4px 10px rgba(0,0,0,.22);
+        }
+        .random-flight-item .flight-name {
+            position: absolute; left: 50%; top: 57px; transform: translateX(-50%);
+            max-width: 125px; padding: 2px 6px; border-radius: 8px; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; font-size: 10px; line-height: 14px;
+            font-weight: 900; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.9);
+            background: rgba(15,23,42,.18);
+        }
+        .random-flight-item.winner {
+            z-index: 12; filter: drop-shadow(0 0 10px rgba(250,204,21,.95));
+        }
+        .random-flight-item.winner img { border-color: #facc15; border-width: 5px; }
+        .wheel-stage-status {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            z-index: 20; padding: 6px 15px; border-radius: 999px;
+            background: rgba(15,23,42,.28); color: #fff; font-size: 11px; font-weight: 900;
+            backdrop-filter: blur(5px); box-shadow: 0 3px 10px rgba(0,0,0,.12);
+        }
+        .wheel-stage-timer {
+            position: absolute; top: 12px; left: 14px; z-index: 20; width: 40px; height: 40px;
+            border-radius: 50%; background: rgba(255,255,255,.78); color: #334155;
+            display: flex; align-items: center; justify-content: center; font-weight: 900;
+            box-shadow: 0 3px 10px rgba(0,0,0,.12);
+        }
+        .wheel-stage-count {
+            position: absolute; top: 12px; right: 14px; z-index: 20; min-width: 40px; height: 40px;
+            padding: 0 9px; border-radius: 999px; background: rgba(255,255,255,.78); color: #334155;
+            display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 10px; font-weight: 900;
+            box-shadow: 0 3px 10px rgba(0,0,0,.12);
         }
         
         #sidebar-class-title {
@@ -540,6 +591,9 @@
                     <div class="wheel-container mb-6">
                         <div class="wheel-pointer"></div>
                         <div class="wheel" id="spin-wheel"></div>
+                        <div class="wheel-stage-timer"><i class="fas fa-pause"></i></div>
+                        <div class="wheel-stage-status" id="wheel-stage-status">Sẵn sàng gọi tên</div>
+                        <div class="wheel-stage-count" id="wheel-stage-count"><i class="fas fa-users"></i><span>0</span></div>
                         <div class="wheel-center"><i class="fas fa-star text-amber-400 text-base sm:text-lg"></i></div>
                     </div>
 
@@ -3205,6 +3259,173 @@
             } catch(e) {}
         };
 
+        let wheelMotionFrame = null;
+        let wheelMotionRunning = false;
+        let wheelMotionItems = [];
+        let wheelMotionLastTime = 0;
+        let wheelSpinTimer = null;
+
+        const escapeWheelHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+        }[ch]));
+
+        const makeDuckAvatar = (seed = 0) => {
+            const colors = ['#ffd34e','#ff8a65','#ff6f91','#9be15d','#56ccf2','#b084f5','#f6bd60','#f28482'];
+            const c = colors[Math.abs(seed) % colors.length];
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${c}"/><stop offset="1" stop-color="#fff2a8"/></linearGradient></defs>
+                <ellipse cx="61" cy="74" rx="39" ry="29" fill="url(#g)"/>
+                <circle cx="53" cy="47" r="28" fill="${c}"/>
+                <ellipse cx="79" cy="54" rx="23" ry="10" fill="#f59e0b"/>
+                <circle cx="61" cy="41" r="5" fill="#fff"/><circle cx="62" cy="42" r="2.5" fill="#111827"/>
+                <path d="M28 69c-12 8-15 20-2 26 13 6 25-3 28-14" fill="${c}" opacity=".9"/>
+                <ellipse cx="64" cy="101" rx="34" ry="7" fill="#fff" opacity=".92"/>
+            </svg>`;
+            return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+        };
+
+        const getWheelAvatar = (student, index) => {
+            if (student && student.avatar && String(student.avatar).trim()) return student.avatar;
+            return makeDuckAvatar(index);
+        };
+
+        const setWheelStageText = (text) => {
+            const el = document.getElementById('wheel-stage-status');
+            if (el) el.innerText = text;
+        };
+
+        const setWheelMotionFrame = () => {
+            if (wheelMotionFrame) cancelAnimationFrame(wheelMotionFrame);
+            wheelMotionFrame = null;
+            wheelMotionRunning = false;
+            wheelMotionLastTime = 0;
+        };
+
+        const getWheelItemList = () => {
+            if (wheelMode === 'student') {
+                return AppState.students.map((st, index) => ({
+                    id: st.id,
+                    name: st.name,
+                    shortName: st.name,
+                    color: null,
+                    data: st,
+                    avatar: getWheelAvatar(st, index)
+                }));
+            }
+            return AppState.groups.map((g, index) => ({
+                id: g.id,
+                name: g.name,
+                shortName: g.name.length > 18 ? g.name.substring(0, 16) + '..' : g.name,
+                color: g.color || null,
+                data: g,
+                avatar: makeDuckAvatar(index + 2)
+            }));
+        };
+
+        const buildRandomFlightItems = (items) => {
+            const wheel = document.getElementById('spin-wheel');
+            if (!wheel) return;
+            setWheelMotionFrame();
+            wheel.innerHTML = '';
+
+            const width = wheel.clientWidth || 700;
+            const height = wheel.clientHeight || 430;
+            const itemW = width < 520 ? 64 : 76;
+            const itemH = width < 520 ? 64 : 76;
+            const cols = Math.max(3, Math.ceil(Math.sqrt(items.length * width / Math.max(height,1))));
+            const rows = Math.max(1, Math.ceil(items.length / cols));
+            const cellW = width / cols;
+            const cellH = height / rows;
+
+            wheelMotionItems = items.map((item, i) => {
+                const el = document.createElement('div');
+                el.className = 'random-flight-item';
+                el.innerHTML = `<img src="${escapeWheelHtml(item.avatar)}" alt=""><span class="flight-name">${escapeWheelHtml(item.shortName)}</span>`;
+                wheel.appendChild(el);
+
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const x = Math.max(2, Math.min(width - itemW - 2, col * cellW + (cellW-itemW)/2 + (Math.random()-.5)*Math.min(24,cellW*.28)));
+                const y = Math.max(2, Math.min(height - itemH - 2, row * cellH + (cellH-itemH)/2 + (Math.random()-.5)*Math.min(20,cellH*.25)));
+                const angle = (Math.random() - .5) * 18;
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.style.transform = `rotate(${angle}deg) scale(${0.84 + Math.random()*0.18})`;
+
+                return {
+                    item, el, x, y, angle,
+                    vx: (Math.random()-.5) * (0.28 + Math.random()*0.55),
+                    vy: (Math.random()-.5) * (0.22 + Math.random()*0.55),
+                    spin: (Math.random()-.5) * 0.45,
+                    phase: Math.random()*Math.PI*2
+                };
+            });
+
+            const count = document.querySelector('#wheel-stage-count span');
+            if (count) count.innerText = items.length;
+        };
+
+        const animateWheelMotion = (now) => {
+            if (!wheelMotionRunning) return;
+            const wheel = document.getElementById('spin-wheel');
+            if (!wheel) return;
+            const dt = Math.min(32, wheelMotionLastTime ? now - wheelMotionLastTime : 16);
+            wheelMotionLastTime = now;
+
+            const maxX = Math.max(0, wheel.clientWidth - 76);
+            const maxY = Math.max(0, wheel.clientHeight - 76);
+            const speedBoost = isSpinning ? 2.5 : 0.35;
+
+            wheelMotionItems.forEach((o, i) => {
+                o.x += o.vx * dt * speedBoost;
+                o.y += o.vy * dt * speedBoost;
+                o.angle += o.spin * dt * speedBoost;
+
+                if (o.x <= 2 || o.x >= maxX) {
+                    o.vx *= -1;
+                    o.x = Math.max(2, Math.min(maxX, o.x));
+                }
+                if (o.y <= 2 || o.y >= maxY) {
+                    o.vy *= -1;
+                    o.y = Math.max(2, Math.min(maxY, o.y));
+                }
+
+                const bob = Math.sin(now/230 + o.phase) * (isSpinning ? 3.5 : 1.5);
+                const scale = 0.84 + (i % 5) * 0.035;
+                o.el.style.left = `${o.x}px`;
+                o.el.style.top = `${o.y + bob}px`;
+                o.el.style.transform = `rotate(${o.angle}deg) scale(${scale})`;
+            });
+
+            wheelMotionFrame = requestAnimationFrame(animateWheelMotion);
+        };
+
+        const startWheelMotion = () => {
+            if (wheelMotionRunning) return;
+            wheelMotionRunning = true;
+            wheelMotionLastTime = 0;
+            wheelMotionFrame = requestAnimationFrame(animateWheelMotion);
+        };
+
+        const initWheel = () => {
+            const wheel = document.getElementById('spin-wheel');
+            if (!wheel) return;
+
+            const items = getWheelItemList();
+            if (items.length === 0) {
+                setWheelMotionFrame();
+                wheel.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xs font-bold text-white/90 p-4 text-center">Chưa có ${wheelMode === 'student' ? 'học sinh' : 'tổ'} nào!</div>`;
+                const count = document.querySelector('#wheel-stage-count span');
+                if (count) count.innerText = '0';
+                setWheelStageText('Chưa có dữ liệu');
+                return;
+            }
+
+            buildRandomFlightItems(items);
+            startWheelMotion();
+            setWheelStageText(wheelMode === 'student' ? 'Sẵn sàng gọi tên' : 'Sẵn sàng gọi tổ');
+        };
+
         const setWheelMode = (mode) => {
             if (isSpinning) return;
             wheelMode = mode;
@@ -3223,55 +3444,6 @@
             initWheel();
         };
 
-        const getWheelItemList = () => {
-            if (wheelMode === 'student') {
-                return AppState.students.map(s => ({
-                    id: s.id,
-                    name: s.name,
-                    shortName: s.name.split(' ').pop(),
-                    color: null,
-                    data: s
-                }));
-            } else {
-                return AppState.groups.map(g => ({
-                    id: g.id,
-                    name: g.name,
-                    shortName: g.name.length > 14 ? g.name.substring(0, 12) + '..' : g.name,
-                    color: g.color || null,
-                    data: g
-                }));
-            }
-        };
-
-        const initWheel = () => {
-            const wheel = document.getElementById('spin-wheel');
-            if (!wheel) return;
-
-            const items = getWheelItemList();
-            if (items.length === 0) {
-                wheel.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xs font-bold text-slate-400 p-4 text-center">Chưa có ${wheelMode === 'student' ? 'học sinh' : 'tổ'} nào!</div>`;
-                return;
-            }
-
-            const n = items.length;
-            const sliceAngle = 360 / n;
-            const defaultColors = ['#0d9488', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f97316', '#06b6d4'];
-
-            wheel.style.transform = `rotate(0deg)`;
-
-            wheel.innerHTML = items.map((item, i) => {
-                const color = item.color || defaultColors[i % defaultColors.length];
-                const rotate = i * sliceAngle;
-                return `
-                    <div class="wheel-slice" style="transform: rotate(${rotate}deg); background: ${color};">
-                        <span style="transform: rotate(${sliceAngle/2}deg) translateY(-50%); position: absolute; left: 16px; top: 50%; font-weight:800; font-size:11px; color:white; text-shadow:0 1px 3px rgba(0,0,0,0.6); white-space:nowrap;">
-                            ${item.shortName}
-                        </span>
-                    </div>
-                `;
-            }).join('');
-        };
-
         const spinWheel = async () => {
             if (isSpinning) return;
             const items = getWheelItemList();
@@ -3287,16 +3459,21 @@
             const btn = document.getElementById('btn-spin');
             btn.disabled = true;
             btn.classList.add('opacity-50');
+            setWheelStageText(wheelMode === 'student' ? 'ĐANG GỌI TÊN...' : 'ĐANG CHỌN TỔ...');
 
             const n = items.length;
             const chosenIndex = Math.floor(Math.random() * n);
-            const sliceAngle = 360 / n;
-            
-            const extraRounds = 6 + Math.floor(Math.random() * 3);
-            const targetDeg = extraRounds * 360 + (360 - (chosenIndex * sliceAngle + sliceAngle / 2));
 
-            const wheel = document.getElementById('spin-wheel');
-            wheel.style.transform = `rotate(${targetDeg}deg)`;
+            // Tăng tốc mạnh và cho từng ảnh một hướng, vị trí, góc quay khác nhau.
+            wheelMotionItems.forEach((o, i) => {
+                const a = Math.random() * Math.PI * 2;
+                const speed = 0.55 + Math.random() * 1.15;
+                o.vx = Math.cos(a) * speed;
+                o.vy = Math.sin(a) * speed;
+                o.spin = (Math.random()-.5) * 1.25;
+            });
+
+            startWheelMotion();
 
             let tickDelay = 50;
             const totalDuration = 4500;
@@ -3305,22 +3482,28 @@
             const triggerDynamicTick = () => {
                 const elapsed = Date.now() - startTime;
                 if (elapsed >= totalDuration) return;
-
                 playTickSound();
-
                 const progress = elapsed / totalDuration;
-                tickDelay = 45 + Math.pow(progress, 2.5) * 320; 
-
+                tickDelay = 45 + Math.pow(progress, 2.5) * 320;
                 setTimeout(triggerDynamicTick, tickDelay);
             };
             triggerDynamicTick();
 
-            setTimeout(() => {
+            clearTimeout(wheelSpinTimer);
+            wheelSpinTimer = setTimeout(() => {
                 isSpinning = false;
                 btn.disabled = false;
                 btn.classList.remove('opacity-50');
 
                 const winner = items[chosenIndex];
+                const winnerObj = wheelMotionItems.find(o => o.item.id === winner.id);
+                if (winnerObj) {
+                    winnerObj.el.classList.add('winner');
+                    winnerObj.vx *= 0.08;
+                    winnerObj.vy *= 0.08;
+                    winnerObj.spin *= 0.05;
+                }
+
                 const avatarEl = document.getElementById('random-winner-avatar');
                 const groupBadge = document.getElementById('random-winner-group-badge');
                 const subtitle = document.getElementById('random-winner-subtitle');
@@ -3339,6 +3522,7 @@
                     document.getElementById('random-winner-name').innerText = winner.name;
                 }
 
+                setWheelStageText(wheelMode === 'student' ? 'ĐÃ CHỌN XONG' : 'ĐÃ CHỌN TỔ');
                 document.getElementById('random-winner-box').classList.remove('hidden');
 
                 if (typeof confetti !== 'undefined') {
