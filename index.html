@@ -1760,6 +1760,10 @@
             AppState.students = await dbGetAll('students');
             AppState.groups = await dbGetAll('groups');
             AppState.monthlyArchives = await dbGetAll('monthlyArchives');
+
+            loadWheelRemaining();
+            syncWheelRemainingPool('student');
+            syncWheelRemainingPool('group');
             
             const savedRewards = await dbGetAll('rewards');
             if (savedRewards.length > 0) {
@@ -3231,6 +3235,57 @@
         let isSpinning = false;
         let tickSynth = null;
 
+        // Danh sach con lai cua vong quay goi ten.
+        // Khong xoa hoc sinh khoi AppState.students; chi loai khoi danh sach
+        // dang cho vong quay de tranh goi lap trong cung mot luot.
+        const WHEEL_REMAINING_KEY = 'lopHocWheelRemaining_v1';
+        let wheelRemainingIds = { student: [], group: [] };
+
+        const loadWheelRemaining = () => {
+            try {
+                const saved = JSON.parse(localStorage.getItem(WHEEL_REMAINING_KEY) || '{}');
+                wheelRemainingIds = {
+                    student: Array.isArray(saved.student) ? saved.student : [],
+                    group: Array.isArray(saved.group) ? saved.group : []
+                };
+            } catch (e) {
+                wheelRemainingIds = { student: [], group: [] };
+            }
+        };
+
+        const saveWheelRemaining = () => {
+            try {
+                localStorage.setItem(WHEEL_REMAINING_KEY, JSON.stringify(wheelRemainingIds));
+            } catch (e) {}
+        };
+
+        const syncWheelRemainingPool = (mode = wheelMode, forceReset = false) => {
+            const source = mode === 'student' ? AppState.students : AppState.groups;
+            const validIds = source.map(item => String(item.id));
+            const current = Array.isArray(wheelRemainingIds[mode]) ? wheelRemainingIds[mode] : [];
+
+            if (forceReset || current.length === 0 || current.some(id => !validIds.includes(String(id)))) {
+                // Neu co du lieu moi/xoa du lieu cu, giu lai cac ID con hop le.
+                // Neu pool da het thi bat dau mot luot moi voi toan bo danh sach.
+                const existingValid = current.filter(id => validIds.includes(String(id)));
+                wheelRemainingIds[mode] = forceReset || existingValid.length === 0
+                    ? [...validIds]
+                    : existingValid;
+                saveWheelRemaining();
+            } else {
+                wheelRemainingIds[mode] = current.filter(id => validIds.includes(String(id)));
+                saveWheelRemaining();
+            }
+            return wheelRemainingIds[mode];
+        };
+
+        const removeWinnerFromWheelPool = (mode, winnerId) => {
+            const pool = Array.isArray(wheelRemainingIds[mode]) ? wheelRemainingIds[mode] : [];
+            wheelRemainingIds[mode] = pool.filter(id => String(id) !== String(winnerId));
+            saveWheelRemaining();
+            return wheelRemainingIds[mode].length;
+        };
+
         const playTickSound = () => {
             try {
                 if (typeof Tone !== 'undefined') {
@@ -3302,24 +3357,33 @@
         };
 
         const getWheelItemList = () => {
-            if (wheelMode === 'student') {
-                return AppState.students.map((st, index) => ({
-                    id: st.id,
-                    name: st.name,
-                    shortName: st.name,
-                    color: null,
-                    data: st,
-                    avatar: getWheelAvatar(st, index)
-                }));
-            }
-            return AppState.groups.map((g, index) => ({
-                id: g.id,
-                name: g.name,
-                shortName: g.name.length > 18 ? g.name.substring(0, 16) + '..' : g.name,
-                color: g.color || null,
-                data: g,
-                avatar: makeDuckAvatar(index + 2)
-            }));
+            const source = wheelMode === 'student' ? AppState.students : AppState.groups;
+            const pool = syncWheelRemainingPool(wheelMode);
+            const byId = new Map(source.map(item => [String(item.id), item]));
+
+            return pool
+                .map((id, index) => byId.get(String(id)))
+                .filter(Boolean)
+                .map((item, index) => {
+                    if (wheelMode === 'student') {
+                        return {
+                            id: item.id,
+                            name: item.name,
+                            shortName: item.name,
+                            color: null,
+                            data: item,
+                            avatar: getWheelAvatar(item, index)
+                        };
+                    }
+                    return {
+                        id: item.id,
+                        name: item.name,
+                        shortName: item.name.length > 18 ? item.name.substring(0, 16) + '..' : item.name,
+                        color: item.color || null,
+                        data: item,
+                        avatar: makeDuckAvatar(index + 2)
+                    };
+                });
         };
 
         const buildRandomFlightItems = (items) => {
@@ -3441,6 +3505,7 @@
             }
 
             document.getElementById('random-winner-box').classList.add('hidden');
+            syncWheelRemainingPool(mode);
             initWheel();
         };
 
@@ -3504,6 +3569,11 @@
                     winnerObj.spin *= 0.05;
                 }
 
+                // Hoc sinh/to da duoc goi se roi khoi danh sach cua luot hien tai.
+                // Khong xoa khoi danh sach hoc sinh cua lop.
+                const remainingAfterPick = removeWinnerFromWheelPool(wheelMode, winner.id);
+                const currentRoundFinished = remainingAfterPick === 0;
+
                 const avatarEl = document.getElementById('random-winner-avatar');
                 const groupBadge = document.getElementById('random-winner-group-badge');
                 const subtitle = document.getElementById('random-winner-subtitle');
@@ -3522,8 +3592,26 @@
                     document.getElementById('random-winner-name').innerText = winner.name;
                 }
 
-                setWheelStageText(wheelMode === 'student' ? 'ĐÃ CHỌN XONG' : 'ĐÃ CHỌN TỔ');
+                // Hien thi danh sach con lai ngay sau khi goi.
+                // Neu da goi het, tu dong khoi phuc toan bo cho luot tiep theo.
+                if (currentRoundFinished) {
+                    syncWheelRemainingPool(wheelMode, true);
+                    setWheelStageText(
+                        wheelMode === 'student'
+                            ? 'ĐÃ GỌI HẾT - ĐÃ KHÔI PHỤC DANH SÁCH'
+                            : 'ĐÃ GỌI HẾT TỔ - ĐÃ KHÔI PHỤC DANH SÁCH'
+                    );
+                } else {
+                    setWheelStageText(wheelMode === 'student' ? 'ĐÃ CHỌN XONG' : 'ĐÃ CHỌN TỔ');
+                }
+
                 document.getElementById('random-winner-box').classList.remove('hidden');
+
+                // Cap nhat vong quay sau khi hien thi ket qua.
+                // Khi het luot, danh sach da duoc reset de san sang cho luot moi.
+                setTimeout(() => {
+                    if (!isSpinning) initWheel();
+                }, 250);
 
                 if (typeof confetti !== 'undefined') {
                     confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
